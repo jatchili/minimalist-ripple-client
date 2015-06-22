@@ -232,7 +232,7 @@ var validate = {
 	secret: function(x) {
 		return !isNaN(ripple.Base.decode_check(ripple.Base.VER_FAMILY_SEED, x));
 	},
-	encryptedSecret(x) {
+	encryptedSecret: function(x) {
 		return !isNaN(ripple.Base.decode_check(VER_ENCRYPTED_ORDINARY, x)) ||
 			!isNaN(ripple.Base.decode_check(VER_ENCRYPTED_REKEYED, x))
 	},
