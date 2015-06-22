@@ -58,13 +58,30 @@ button:not(.offline) {
 <h2>identity</h2>
 
 <span id="myaddress"></span><br/>
+
 <button class="offline" onclick="toggleSecret()">show/hide secret</button>
 <input id="mysecret" type="text" placeholder="secret" /><br/>
+
 <button class="offline" onclick="pressSetIdentity()">set identity</button>
 <button class="offline" onclick="pressClearIdentity()">clear identity</button>
 <button class="offline" onclick="pressGenerateIdentity()">generate identity</button>
-<button id="rekeybutton" onclick="pressRekey()">rekey account</button>
+<button id="rekeybutton" onclick="pressRekey()">rekey account</button><br/>
 
+<span class="displaynone" id="encryptshow">
+	<button class="offline" onclick="showEncryptor()">encrypt secret</button>
+</span>
+<input class="displaynone" id="passphrase" type="password" placeholder="passphrase" />
+<input class="displaynone" id="confirmpassphrase" type="password" placeholder="confirm passphrase" />
+<span class="displaynone" id="decryptbutton">
+	<button class="offline" onclick="pressDecrypt()">decrypt</button>
+</span>
+<span class="displaynone" id="encryptbutton">
+	<button class="offline" onclick="pressEncryptSecret()">encrypt</button>
+</span>
+
+<span class="hidden"> <!-- space-filler -->
+	<button>_</button><input type="password"/>
+</span>
 
 
 <h2>connect</h2>
@@ -183,8 +200,9 @@ document.getElementById("useoptional").checked = false;
 document.getElementById("mysecret").value = "";
 clearAllInfo();
 
-
-
+var VER_REKEYED = 220;
+var VER_ENCRYPTED_ORDINARY = 160;
+var VER_ENCRYPTED_REKEYED = 250;
 
 
 // Helper functions
@@ -213,6 +231,10 @@ var validate = {
 	},
 	secret: function(x) {
 		return !isNaN(ripple.Base.decode_check(ripple.Base.VER_FAMILY_SEED, x));
+	},
+	encryptedSecret(x) {
+		return !isNaN(ripple.Base.decode_check(VER_ENCRYPTED_ORDINARY, x)) ||
+			!isNaN(ripple.Base.decode_check(VER_ENCRYPTED_REKEYED, x))
 	},
 	"currency/issuer pair": function(x) {
 		var s = x.split("/");
@@ -342,7 +364,9 @@ function pressSetIdentity() {
 	} else if (secret) {
 		if (secret.charAt(0) === "s" && setOrdinarySecret(secret)) {
 			// pass
-		} else if (secret.charAt(0) === "e" && setRekeyedSecret(secret)) {
+		} else if (secret.charAt(0) === "3" && setRekeyedSecret(secret)) {
+			// pass
+		} else if (secret.charAt(0) === "h" && setEncryptedSecret(secret)) {
 			// pass
 		} else {
 			alert('"'+secret+'" is not a valid secret');
@@ -365,26 +389,148 @@ function setOrdinarySecret(secret) {
 }
 
 function setRekeyedSecret(secret) {
-	// This uses a custom format that is specific to this application.
-	// length_indicator = ripple.Base.encode([regular_key_secret.length])
-	// format: "e" + length_indicator + regular_key_secret + master_secret
+	// This uses a custom format that is specific to this application:
+	// ripple.Base.encode_check(VER_REKEYED, regular_key_secret concat master_secret)
 	if (secret.length < 2) {
 		return false;
 	}
-	var rksLength = ripple.Base.decode(secret.charAt(1))[0];
-	var rks = secret.slice(2, rksLength+2);
-	var ms = secret.slice(rksLength+2);
-	if (validate.secret(rks) && validate.secret(ms)) {
-		var ra = generateAddress(ms).address;
-		setIdentity(ra, secret, ms);
-		remote.setSecret(ra, ms);
-		remote.setSecret(generateAddress(rks).address, rks);
-		redefineSigningToAlwaysUseSecret(rks);
-		return true;
-	} else {
+	var b = ripple.Base.decode_check(VER_REKEYED, secret);
+	if (isNaN(b)) {
 		return false;
 	}
+	var y = ripple.sjcl.codec.bytes.fromBits(b.toBits());
+	if (y.length !== 32) {
+		return false;
+	}
+	var rks = ripple.Base.encode_check(ripple.Base.VER_FAMILY_SEED, y.slice(0,16));
+	var ms = ripple.Base.encode_check(ripple.Base.VER_FAMILY_SEED, y.slice(16));
+	var ra = generateAddress(ms).address;
+	setIdentity(ra, secret, ms);
+	remote.setSecret(ra, ms);
+	remote.setSecret(generateAddress(rks).address, rks);
+	redefineSigningToAlwaysUseSecret(rks);
+	return true;
 }
+
+function setEncryptedSecret(encryptedSecret) {
+	if (!validate.encryptedSecret(encryptedSecret)) {
+		return false;
+	}
+	showDecryptor();
+	return true;
+}
+
+function pressDecrypt() {
+	var es = document.getElementById("mysecret").value;
+	var passphrase = document.getElementById("passphrase").value;
+	if (es.charAt(0) !== "h" || !validate.encryptedSecret(es)) {
+		alert('invalid encrypted secret');
+		return;
+	}
+	if (!passphrase) {
+		alert('you must enter a passphrase');
+		return;
+	}
+	var secret;
+	try {
+		secret = decryptSecret(passphrase, es);
+	} catch(err) {
+		alert('invalid passphrase or encrypted secret');
+		document.getElementById("passphrase").value = "";
+		return;
+	}
+	if (secret.charAt(0) === "s" && setOrdinarySecret(secret)) {
+		hideDecryptor();
+	} else if (secret.charAt(0) === "3" && setRekeyedSecret(secret)) {
+		hideDecryptor();
+	} else {
+		alert('invalid passphrase or encrypted secret');
+		document.getElementById("passphrase").value = "";
+	}
+}
+
+function showDecryptor() {
+	document.getElementById("passphrase").className = "";
+	document.getElementById("decryptbutton").className = "";
+	document.getElementById("encryptshow").className = "displaynone";
+}
+
+function hideDecryptor() {
+	var pp = document.getElementById("passphrase");
+	pp.value = "";
+	pp.className = "displaynone";
+	document.getElementById("decryptbutton").className = "displaynone";
+}
+
+function showEncryptorShower() {
+	document.getElementById("encryptshow").className = "";
+}
+
+function showEncryptor() {
+	document.getElementById("passphrase").className = "";
+	document.getElementById("confirmpassphrase").className = "";
+	document.getElementById("encryptshow").className = "displaynone";
+	document.getElementById("encryptbutton").className = "";
+}
+
+function hideEncryptor() {
+	var pp = document.getElementById("passphrase")
+	pp.className = "displaynone";
+	pp.value = "";
+	var pp2 = document.getElementById("confirmpassphrase")
+	pp2.className = "displaynone";
+	pp2.value = "";
+	document.getElementById("encryptshow").className = "";
+	document.getElementById("encryptbutton").className = "displaynone";
+}
+
+function pressEncryptSecret() {
+	var pp = document.getElementById("passphrase").value;
+	var pp2 = document.getElementById("confirmpassphrase").value;
+	if (!pp || !pp2) {
+		alert("you must enter something");
+	} else if (pp !== pp2) {
+		alert("passphrases must match");
+	} else {
+		var es = encryptSecret(pp, document.getElementById("mysecret").value);
+		prompt("your encrypted secret is:", es);
+		hideEncryptor();
+	}
+}
+
+function encryptSecret(passphrase, secret) {
+	var payloadBytes = ripple.Base.decode(secret);
+	var version = payloadBytes[0]===ripple.Base.VER_FAMILY_SEED ?
+		VER_ENCRYPTED_ORDINARY : VER_ENCRYPTED_REKEYED;
+	var salt = ripple.sjcl.random.randomWords(2); // 8 bytes of salt
+	var streamBytes = ripple.sjcl.codec.bytes.fromBits(
+		ripple.sjcl.misc.pbkdf2(passphrase, salt, void(0), 8*payloadBytes.length)
+	);
+	var encryptedBytes = streamBytes.map(function(x,i) {
+        return x ^ payloadBytes[i];
+    });
+    var saltBytes = ripple.sjcl.codec.bytes.fromBits(salt);
+    return ripple.Base.encode_check(version, saltBytes.concat(encryptedBytes));
+}
+
+function decryptSecret(passphrase, es) {
+	var ao = ripple.Base.decode_check(VER_ENCRYPTED_ORDINARY, es);
+	var ar = ripple.Base.decode_check(VER_ENCRYPTED_REKEYED, es);
+	var a = isNaN(ao) ? ar : ao;
+	ripple.sjcl.codec.bytes.fromBits(a.toBits());
+	var b = ripple.sjcl.codec.bytes.fromBits(a.toBits());
+	var saltBytes = b.slice(0,8)
+	var encryptedBytes = b.slice(8)
+	var streamBytes = ripple.sjcl.codec.bytes.fromBits(
+		ripple.sjcl.misc.pbkdf2(passphrase, ripple.sjcl.codec.bytes.toBits(saltBytes), void(0), 8*encryptedBytes.length)
+	);
+	var payloadBytes = streamBytes.map(function(x,i) {
+	    return x ^ encryptedBytes[i];
+	});
+	var result = ripple.Base.encode(payloadBytes);
+	return result;
+}
+
 
 function setIdentity(address, displayedSecret, masterSecret) {
 	MY_ADDRESS = address;
@@ -392,6 +538,7 @@ function setIdentity(address, displayedSecret, masterSecret) {
 	document.getElementById("mysecret").value = displayedSecret;
 	document.getElementById("myaddress").innerHTML = address;
 	document.getElementById("mysecret").className="hidden";
+	showEncryptorShower();
 }
 
 
@@ -412,6 +559,9 @@ function pressClearIdentity() {
 		document.getElementById("myaddress").innerHTML = "";
 		setIdentity("", "");
 		document.getElementById("mysecret").className="";
+		hideEncryptor();
+		hideDecryptor();
+		document.getElementById("encryptshow").className = "displaynone";
 	}
 }
 
@@ -438,10 +588,12 @@ function generateAddress(secret) {
 
 function generateRekeyedKey() {
 	var keypair = generateAddress();
-	var lengthIndicator = ripple.Base.encode([keypair.secret.length]);
+	var a1 = ripple.sjcl.codec.bytes.fromBits(ripple.Seed.from_json(keypair.secret).to_bits());
+	var a2 = ripple.sjcl.codec.bytes.fromBits(ripple.Seed.from_json(MASTER_SECRET).to_bits());
+	var rks = ripple.Base.encode_check(VER_REKEYED, a1.concat(a2));
 	return {
 		regularKey: keypair.address,
-		rekeyedSecret: "e"+lengthIndicator+keypair.secret+MASTER_SECRET,
+		rekeyedSecret: rks,
 		actualSecret: keypair.secret
 	};
 }
