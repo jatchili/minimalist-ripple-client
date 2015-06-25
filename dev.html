@@ -24,6 +24,11 @@ button:not(.offline) {
 #sendbutton, .complexsendbutton, .cancelbutton { width: 72px; }
 #trustbutton { width: 84px; }
 #startpathfindingbutton, #rekeybutton { width: 100px; }
+.tilde { width: 30px; }
+.halfoffset {
+	position: relative;
+	top: 9px;
+}
 
 .pathsJSON div { display: none; }
 .pathsJSON:hover div {
@@ -87,15 +92,19 @@ button:not(.offline) {
 <h2>connect</h2>
 
 <button onclick="connectToRipple()">connect to ripple</button>
-<button onclick="disconnectFromRipple()">disconnect</button><br/>
+<button onclick="disconnectFromRipple()">disconnect</button><br/><br/>
 
+<input id="nameurl" type="text" value="id.ripple.com/v1/authinfo?username=" /><br/>
+<label><input id="useripplenames" type="checkbox"/> resolve ripple names with ~ button</label>
 
 
 <h2>account details</h2>
 
 <button class="offline" onclick="useCurrentIdentity()">use current identity</button>
 <button class="offline" onclick="clearAllInfo()">clear all</button><br/>
-<input id="infoaccount" type="text" placeholder="account" /><br/>
+<input id="infoaccount" type="text" placeholder="account" />
+<button tabindex="-1" class="tilde" onclick="pressResolve(this,['infoaccount'])">~</button>
+<br/>
 
 <button onclick="pressInfo()">view info</button><br/>
 <table id="infotable" border="1"></table>
@@ -118,7 +127,9 @@ button:not(.offline) {
 <label>
 	<input type="checkbox" id="directxrp" onclick="toggleDirectXRP(this)"/>direct xrp&rarr;xrp
 </label><br/>
-<input type="text" id="senddestination" placeholder="destination" /><br/>
+<input type="text" id="senddestination" placeholder="destination" />
+<button tabindex="-1" class="tilde" onclick="pressResolve(this,['senddestination'])">~</button>
+<br/>
 
 <label><input id="useoptional" onclick="toggleOptionalFields(this)" type="checkbox"/>use optional fields</label><br/>
 
@@ -145,7 +156,8 @@ button:not(.offline) {
 
 <input id="trustamount" type="text" placeholder="amount" /><br/>
 <input id="trustcurrency" type="text" placeholder="currency" /><br/>
-<input id="trustissuer" type="text" placeholder="issuer" /><br/>
+<input id="trustissuer" type="text" placeholder="issuer" />
+<button tabindex="-1" class="tilde" onclick="pressResolve(this,['trustissuer'])">~</button><br/>
 <label><input id="trustnoripple" type="checkbox" / >no ripple</label><br/>
 <button id="trustbutton" onclick="pressTrust()">set trust</button>
 
@@ -153,7 +165,8 @@ button:not(.offline) {
 
 <h2>trade</h2>
 
-<input type="text" class="wide" id="curissuer1" placeholder="CUR/issuer #1" /><br/>
+<input type="text" class="wide" id="curissuer1" placeholder="CUR/issuer #1" />
+<button tabindex="-1" class="tilde halfoffset" onclick="pressResolve(this,['curissuer1','curissuer2'])">~</button><br/>
 <input type="text" class="wide" id="curissuer2" placeholder="CUR/issuer #2" /><br/>
 <button onclick="pressBook()">view order book</button>
 <button class="offline" onclick="clearBooks()">clear</button><br/>
@@ -161,7 +174,8 @@ button:not(.offline) {
 <table border="1" class="booktable" id="asktable"></table><br/>
 
 <input type="text" class="wide" id="tpamount" placeholder="TakerPays amount" /><br/>
-<input type="text" class="wide" id="tpcurissuer" placeholder="TakerPays CUR/issuer" /><br/>
+<input type="text" class="wide" id="tpcurissuer" placeholder="TakerPays CUR/issuer" />
+<button tabindex="-1" class="tilde halfoffset" onclick="pressResolve(this,['tpcurissuer','tgcurissuer'])">~</button><br/>
 <input type="text" class="wide" id="tgamount" placeholder="TakerGets amount" /><br/>
 <input type="text" class="wide" id="tgcurissuer" placeholder="TakerGets CUR/issuer" /><br/>
 <button onclick="pressOffer()" id="offerbutton">submit offer</button>
@@ -302,6 +316,94 @@ function guard(guardians, target) {
 	};
 }
 
+
+
+// Ripple names
+
+function httpGet(url, callback) {
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() { 
+		if (xhr.readyState === 4 && xhr.status === 200) {
+			callback(null, xhr.responseText);
+		}
+	}
+	xhr.onerror = function() {
+		callback(true);
+	}
+	xhr.open("GET", url, true);   
+	xhr.send(null);
+}
+
+var rnCache = {};
+function resolveRippleName(name, callback) {
+	var nameURL = document.getElementById("nameurl").value;
+	if (!rnCache[nameURL]) {
+		rnCache[nameURL] = {};
+	}
+	if ("undefined" !== typeof rnCache[nameURL][name]) {
+		callback(null, rnCache[nameURL][name]);
+	} else {
+		httpGet("https://"+nameURL+name, function(err, res){
+			var result;
+			if (!err) {
+				var parsed = JSON.parse(res);
+				var result = parsed.exists && parsed.address;
+				rnCache[nameURL][name] = result;
+			}
+			callback(err, result);
+		});
+	}
+}
+
+function pressResolve(pressedButton, inputs) {
+	if (!document.getElementById("useripplenames").checked) {
+		alert("you must enable the ~ button");
+		return;
+	}
+	pressedButton.disabled = "disabled";
+	pressedButton.innerHTML = "...";
+	var numberOfResponses = 0;
+	var alreadyAlerted = false;
+	for (var i=0; i<inputs.length; i++) {
+		var input = inputs[i];
+		var value = document.getElementById(input).value;
+		var ci = value.split("/");
+		var currency = false;
+		if (ci.length === 2) {
+			currency = ci[0];
+			value = ci[1];
+		}
+		if (!value || inputs.length > 1 && !currency && value === "XRP" || validate.address(value)) {
+			continue;
+		}
+		if (value.charAt(0) !== "~") {
+			alreadyAlerted || alert("ripple name must begin with ~");
+			alreadyAlerted = true;
+		} else {
+			resolveRippleName(value, (function(){
+				var inp = input;
+				var cur = currency;
+				return function(err, result) {
+					numberOfResponses++;
+					if (numberOfResponses === inputs.length) {
+						pressedButton.disabled = "";
+						pressedButton.innerHTML = "~";
+					}
+					if (err) {
+						alreadyAlerted || alert("could not reach ripple name resolver");
+						alreadyAlerted = true;
+					} else if (!result) {
+						alreadyAlerted || alert("could not resolve ripple name "+value);
+						alreadyAlerted = true;
+					} else {
+						document.getElementById(inp).value = cur ? 
+							cur+"/"+result : result;
+					}
+				}
+			})());
+		}
+	}
+}
 
 
 // Miscellaneous
