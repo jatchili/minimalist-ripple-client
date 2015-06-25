@@ -387,6 +387,11 @@ function pressResolve(pressedButton, inputs) {
 			value = ci[1];
 		}
 		if (!value || inputs.length > 1 && !currency && value === "XRP" || validate.address(value)) {
+			numberOfResponses++;
+			if (numberOfResponses === inputs.length) {
+				pressedButton.disabled = "";
+				pressedButton.innerHTML = "~";
+			}
 			continue;
 		}
 		if (value.charAt(0) !== "~") {
