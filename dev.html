@@ -363,6 +363,13 @@ function pressResolve(pressedButton, inputs) {
 	pressedButton.disabled = "disabled";
 	pressedButton.innerHTML = "...";
 	var numberOfResponses = 0;
+	function concludeResponse() {
+		numberOfResponses++;
+		if (numberOfResponses === inputs.length) {
+			pressedButton.disabled = "";
+			pressedButton.innerHTML = "~";
+		}
+	}
 	var alreadyAlerted = false;
 	for (var i=0; i<inputs.length; i++) {
 		var input = inputs[i];
@@ -374,26 +381,19 @@ function pressResolve(pressedButton, inputs) {
 			value = ci[1];
 		}
 		if (!value || inputs.length > 1 && !currency && value === "XRP" || validate.address(value)) {
-			numberOfResponses++;
-			if (numberOfResponses === inputs.length) {
-				pressedButton.disabled = "";
-				pressedButton.innerHTML = "~";
-			}
+			concludeResponse();
 			continue;
 		}
 		if (value.charAt(0) !== "~") {
 			alreadyAlerted || alert("ripple name must begin with ~");
 			alreadyAlerted = true;
+			concludeResponse();
 		} else {
 			resolveRippleName(value, (function(){
 				var inp = input;
 				var cur = currency;
 				return function(err, result) {
-					numberOfResponses++;
-					if (numberOfResponses === inputs.length) {
-						pressedButton.disabled = "";
-						pressedButton.innerHTML = "~";
-					}
+					concludeResponse();
 					if (err) {
 						alreadyAlerted || alert("could not reach ripple name resolver");
 						alreadyAlerted = true;
