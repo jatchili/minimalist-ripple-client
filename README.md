@@ -105,7 +105,7 @@ First, you need to be connected to Ripple, and you need to have loaded the secre
  
 Use this information at your own risk. It worked when I tried it, but that's no guarantee. I'm not affiliated with [btc2ripple](https://btc2ripple.com/#/), and they don't endorse me, nor I them.
  
-1. Construct a URL from the following template: `https://btc2ripple.com/api/v1/bridge?type=quote&amount=BitcoinAmount%2FBTC&destination=BitcoinAddress` Replace `BitcoinAmount` with the amount of bitcoin you want to send (e.g. 0.123), and `BitcoinAddress` with the destination bitcoin address. (I think the amount is capped to 10 BTC per ripple account, but you should check the btc2ripple TOS to make sure.)
+1. Construct a URL from the following template: `https://btc2ripple.com/api/v1/bridge?type=quote&amount=BitcoinAmount%2FBTC&destination=BitcoinAddress` replacing `BitcoinAmount` with the amount of bitcoin you want to send (e.g. 0.123), and `BitcoinAddress` with the destination bitcoin address. (I think the amount is capped to 10 BTC per ripple account, but you should check the btc2ripple TOS to make sure.)
 2. Load the URL in a browser window. You should get a response with a number of fields, the most important of which are `destination_address` (the ripple address you should send to), `destination_tag`, and `invoice_id`.
 3. In Ripple, send a "Payment" transaction to the `destination_address`, setting the `destination_tag` and `invoice_id` fields accordingly. Make sure that the currency is BTC, and the amount is the same as the bitcoin amount you chose in step 1. You can use any path you like, as long as the received amount is correct. (Also, make sure to do this before the `expires` timestamp, which is 24 hours into the future.)
 4. Wait for the bitcoin to arrive. (Mine posted to the blockchain in ~10 minutes, although the wait time may vary.)
@@ -119,7 +119,7 @@ Yes, for now, at least in minor ways. This may change in the future.
 
 ### How is the repo set up? Isn't it redundant to have `index.html` just being the same as `dev.html` with ripple-lib included inline?
 
-The repo has two branches: `master` for development, and `gh-pages` for release. Submit pull-requests against `master`.
+The repo has two branches: `master` for development, and `gh-pages` for release. Submit pull-requests against `master`. Use `dev.html` for development, because it functions the same as `index.html` and doesn't have a huge block of minified JS to get in the way.
 
 GitHub Pages requires that there be a file called `index.html` in the root directory, which is the file you see when you [access it online](https://jatchili.github.io/minimalist-ripple-client). We want this file not to reference any external resources, so that people can download and run it easily.
 
