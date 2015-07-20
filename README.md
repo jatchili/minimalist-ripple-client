@@ -63,11 +63,11 @@ Also: If I were trying to steal from you, I'm doing a really bad job of it. It's
 
 ### Where is my secret stored? How it is transmitted?
 
-**Your secret is not stored anywhere** that persists once the window is closed*. You ***MUST*** store it somewhere else - like in a text file and/or on paper - or else you'll lose access to your account!
+**Your secret is not stored anywhere** that persists once the window is closed\*. You ***MUST*** store it somewhere else - like in a text file and/or on paper - or else you'll lose access to your account!
 
 Transactions are signed locally using ripple-lib. Assuming that ripple-lib is secure, your secret will never leave your computer.
 
-*Note: Depending on your browser, this may not be a cryptographically secure guarantee, since data might persist in memory even after the browser is closed. As a web developer I can't really do much about that. However, I can suggest that you use [Tor Browser](https://www.torproject.org/download/download), which does its best to clean up after itself on exit.
+\*Note: Depending on your browser, this may not be a cryptographically secure guarantee, since data might persist in memory even after the browser is closed. As a web developer I can't really do much about that. However, I can suggest that you use [Tor Browser](https://www.torproject.org/download/download), which does its best to clean up after itself on exit.
 
 
 ### Why are some buttons bold and others not?
