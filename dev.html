@@ -1259,11 +1259,13 @@ function startPathfinding(source, destination, amount, currency) {
 			for (var cur in currencies) {
 				sourceCurrencies.push({currency: cur});
 			}
-			var receiveAmount = ripple.Amount.from_json({
-				value: amount,
-				currency: currency,
-				issuer: destination
-			});
+			var receiveAmount = ripple.Amount.from_json(currency==="XRP" ?
+				""+(amount*1000000) : {
+					value: amount,
+					currency: currency,
+					issuer: destination
+				}
+			);
 			pathfind = remote.pathFind({
 				src_account: source,
 				dst_account: destination,
