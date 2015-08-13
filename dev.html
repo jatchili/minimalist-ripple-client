@@ -7,6 +7,8 @@
 .hidden { visibility: hidden; }
 .displaynone { display: none !important; }
 
+#mysecret[disabled] { border: none; }
+
 #myaddress:empty:before { content: "(no identity set)"; }
 table:empty { display: none; }
 td.centered { text-align: center; }
@@ -644,6 +646,7 @@ function setIdentity(address, displayedSecret, masterSecret) {
 	MASTER_SECRET = masterSecret;
 	document.getElementById("mysecret").value = displayedSecret;
 	document.getElementById("myaddress").innerHTML = address;
+	document.getElementById("mysecret").disabled="disabled";
 	document.getElementById("mysecret").className="hidden";
 	showEncryptorShower();
 }
@@ -665,6 +668,7 @@ function pressClearIdentity() {
 		document.getElementById("mysecret").value = "";
 		document.getElementById("myaddress").innerHTML = "";
 		setIdentity("", "");
+		document.getElementById("mysecret").disabled=null;
 		document.getElementById("mysecret").className="";
 		hideEncryptor();
 		hideDecryptor();
