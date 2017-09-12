@@ -4,7 +4,9 @@ Access it online here: https://jatchili.github.io/minimalist-ripple-client
 
 Or download the code here: https://raw.githubusercontent.com/jatchili/minimalist-ripple-client/master/index.html
 
-Last updated: July 20, 2015.
+**Note: Some users have reported bugs when using this client in Safari. Please use a non-Safari browser.**
+
+Last updated: September 12, 2017.
 
 
 ## Contents
@@ -115,7 +117,7 @@ Use this information at your own risk. It worked when I tried it, but that's no 
 
 ### Are you going to keep updating this?
 
-Yes, for now, at least in minor ways. This may change in the future.
+Only sporadically.
 
 ### How is the repo set up? Isn't it redundant to have `index.html` just being the same as `dev.html` with ripple-lib included inline?
 
