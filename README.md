@@ -4,7 +4,7 @@ Access it online here: https://jatchili.github.io/minimalist-ripple-client
 
 Or download the code here: https://raw.githubusercontent.com/jatchili/minimalist-ripple-client/master/index.html
 
-Note: Some users have reported bugs when using this client in Safari. Please use a non-Safari browser.
+**Note: Some users have reported bugs when using this client in Safari. Please use a non-Safari browser.**
 
 Last updated: September 12, 2017.
 
