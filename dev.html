@@ -50,7 +50,7 @@ button:not(.offline) {
 </style>
 
 </head>
-<body>
+<body onload="IsSafari()">
 
 <noscript><h2>you need to enable javascript to use this!</h2><hr/></noscript>
 
@@ -225,6 +225,19 @@ var VER_ENCRYPTED_REKEYED = 250;
 // Helper functions
 // --------------------------------
 
+// Detect and alert if Safari browser is used
+function IsSafari() {
+
+var ua = navigator.userAgent.toLowerCase(); 
+if (ua.indexOf('safari') != -1) { 
+	if (ua.indexOf('chrome') > -1) {
+		//All good
+	} else {
+		alert("STOP! It looks like you're using Safari browser.  It's been reported that there are bugs with generating correct addresses with it so use another browser like Chrome.") // Safari
+	}
+}
+
+}
 
 // State/input validation
 
