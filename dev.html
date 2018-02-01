@@ -50,7 +50,7 @@ button:not(.offline) {
 </style>
 
 </head>
-<body onload="IsSafari()">
+<body onload="isSafari()">
 
 <noscript><h2>you need to enable javascript to use this!</h2><hr/></noscript>
 
@@ -226,7 +226,7 @@ var VER_ENCRYPTED_REKEYED = 250;
 // --------------------------------
 
 // Detect and alert if Safari browser is used
-function IsSafari() {
+function isSafari() {
 
 var ua = navigator.userAgent.toLowerCase(); 
 if (ua.indexOf('safari') != -1) { 
