@@ -13,7 +13,7 @@
 table:empty { display: none; }
 td.centered { text-align: center; }
 
-input[type="text"] { width: 240px; }
+input[type="text"] { width: 280px; }
 input[type="text"].wide { width: 280px; }
 input[type="text"].narrow { width: 120px; }
 
@@ -50,7 +50,7 @@ button:not(.offline) {
 </style>
 
 </head>
-<body>
+<body onload="isSafari()">
 
 <noscript><h2>you need to enable javascript to use this!</h2><hr/></noscript>
 
@@ -225,6 +225,19 @@ var VER_ENCRYPTED_REKEYED = 250;
 // Helper functions
 // --------------------------------
 
+// Detect and alert if Safari browser is used
+function isSafari() {
+
+var ua = navigator.userAgent.toLowerCase(); 
+if (ua.indexOf('safari') != -1) { 
+	if (ua.indexOf('chrome') > -1) {
+		//All good
+	} else {
+		alert("STOP! It looks like you're using Safari browser.  It's been reported that there are bugs with generating correct addresses with it so use another browser like Chrome.") // Safari
+	}
+}
+
+}
 
 // State/input validation
 
