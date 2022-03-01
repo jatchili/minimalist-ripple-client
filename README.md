@@ -1,8 +1,10 @@
 # minimalist-ripple-client
 
-Access it online here: https://jatchili.github.io/minimalist-ripple-client
+Fork of https://github.com/jatchili/minimalist-ripple-client with fixed connection
 
-Or download the code here: https://raw.githubusercontent.com/jatchili/minimalist-ripple-client/master/index.html
+Access it online here: https://ivanludvig.github.io/minimalist-ripple-client
+
+Or download the code here: https://raw.githubusercontent.com/IvanLudvig/minimalist-ripple-client/master/index.html
 
 **Note: Some users have reported bugs when using this client in Safari. Please use a non-Safari browser.**
 
